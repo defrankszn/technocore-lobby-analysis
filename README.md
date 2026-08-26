@@ -16,17 +16,17 @@ Each snapshot contains 200 messages.
 
 Total observations:
 
-* 600 messages
-* 3 snapshots
-* 200 messages per snapshot
+- 600 messages
+- 3 snapshots
+- 200 messages per snapshot
 
 Each message contains:
 
-* `seq`
-* `ts`
-* `from`
-* `text`
-* `nonce`
+- `seq`
+- `ts`
+- `from`
+- `text`
+- `nonce`
 
 The raw JSON snapshots are available in the `data/` directory.
 
@@ -34,14 +34,14 @@ The raw JSON snapshots are available in the `data/` directory.
 
 The analysis compares:
 
-* Total messages
-* Unique DIDs
-* DIDs appearing more than once
-* Unique exact message texts
-* Messages belonging to repeated exact-text groups
-* Repeated-text rate
-* Exact message templates appearing across all three snapshots
-* Concentration of persistent templates
+- Total messages
+- Unique DIDs
+- DIDs appearing more than once
+- Unique exact message texts
+- Messages belonging to repeated exact-text groups
+- Repeated-text rate
+- Exact message templates appearing across all three snapshots
+- Concentration of persistent templates
 
 The analysis can be reproduced by running:
 
@@ -53,16 +53,16 @@ python analysis/analyze.py
 
 Across 600 messages:
 
-* 589 unique DIDs
-* 98.2% DID uniqueness
-* 10 DIDs appeared more than once
-* Maximum appearances by one DID: 3
-* 188 unique exact message texts
-* 431 messages belonged to repeated exact-text groups
-* Combined repeated-text rate: 71.8%
-* 15 exact message templates appeared in all three snapshots
-* Those 15 persistent templates accounted for 422 of 600 messages
-* Persistent-template share: 70.3%
+- 589 unique DIDs
+- 98.2% DID uniqueness
+- 10 DIDs appeared more than once
+- Maximum appearances by one DID: 3
+- 188 unique exact message texts
+- 431 messages belonged to repeated exact-text groups
+- Combined repeated-text rate: 71.8%
+- 15 exact message templates appeared in all three snapshots
+- Those 15 persistent templates accounted for 422 of 600 messages
+- Persistent-template share: 70.3%
 
 The main observation is the contrast between identity diversity and content diversity.
 
@@ -82,10 +82,10 @@ This is a small observational dataset.
 
 The analysis covers only:
 
-* 600 messages
-* Three short sampling windows
-* The Technocore `lobby` room
-* Exact-text matching only
+- 600 messages
+- Three short sampling windows
+- The Technocore `lobby` room
+- Exact-text matching only
 
 It does not capture semantic similarity between differently worded messages, long-term DID behavior, operator identity, or activity across the wider Technocore network.
 
@@ -99,11 +99,17 @@ technocore-lobby-analysis/
 ├── .gitignore
 ├── analysis/
 │   └── analyze.py
-└── data/
-    ├── lobby_200.json
-    ├── lobby_200_2.json
-    └── lobby_200_3.json
+├── data/
+│   ├── lobby_200.json
+│   ├── lobby_200_2.json
+│   └── lobby_200_3.json
+├── examples/
+│   └── sample_report.json
+├── workflow/
+│   └── collect_and_analyze.py
+└── technocore-analysis-proof.json
 ```
+
 ## Cryptographic Proof
 
 This repository includes `technocore-analysis-proof.json`, which cryptographically links my Technocore DID to a specific public revision of this analysis.
@@ -120,3 +126,55 @@ To verify the proof using the Technocore starter client:
 
 ```bash
 python ../technocore-did-starter/technocore_agent.py verify-proof technocore-analysis-proof.json
+```
+
+A valid verification should return the DID that signed the proof.
+
+## Automated Lobby Intelligence Workflow
+
+The repository also includes an automated Technocore lobby analysis workflow at:
+
+`workflow/collect_and_analyze.py`
+
+The workflow:
+
+1. Reads the latest 200 messages from the Technocore lobby.
+2. Validates the response and retries failed or empty reads.
+3. Saves each successful collection as a timestamped JSON snapshot.
+4. Measures DID diversity and exact-text diversity.
+5. Calculates the repeated-text rate.
+6. Compares the latest snapshot with the previous snapshot.
+7. Identifies persistent exact-message templates.
+8. Generates a machine-readable JSON report.
+
+Generated snapshots and reports are stored locally under:
+
+`data/workflow_snapshots/`
+
+This directory is ignored by Git to prevent automatically generated observations from continuously filling the repository.
+
+A sample generated report is available at:
+
+`examples/sample_report.json`
+
+### Run the workflow
+
+The workflow currently expects the Technocore starter repository and this repository to exist beside each other:
+
+```text
+Documents/
+├── technocore-did-starter/
+└── technocore-lobby-analysis/
+```
+
+The Technocore starter virtual environment must be configured with its required dependencies.
+
+From the `technocore-lobby-analysis` directory, run:
+
+```bash
+python workflow/collect_and_analyze.py
+```
+
+Each successful run performs:
+
+`collect → validate/retry → save → analyze → compare → report`
