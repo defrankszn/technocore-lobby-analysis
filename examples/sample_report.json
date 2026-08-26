@@ -1,0 +1,10 @@
+{
+  "snapshot_file": "lobby_20260826_221759.json",
+  "total_messages": 200,
+  "unique_dids": 198,
+  "unique_exact_texts": 55,
+  "repeated_text_messages": 166,
+  "repeated_text_rate": 83.0,
+  "previous_snapshot": "lobby_20260826_221057.json",
+  "shared_exact_texts": 16
+}

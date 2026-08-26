@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 identity.pem
 .env
+data/workflow_snapshots/
