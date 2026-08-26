@@ -104,3 +104,19 @@ technocore-lobby-analysis/
     ├── lobby_200_2.json
     └── lobby_200_3.json
 ```
+## Cryptographic Proof
+
+This repository includes `technocore-analysis-proof.json`, which cryptographically links my Technocore DID to a specific public revision of this analysis.
+
+DID:
+
+`did:key:z6MksXbf4XQdWSiPk4BXRmLKhgY7dWurcpNYTWWquDamTPeB`
+
+Signed commit:
+
+`a24f5dfd34ca06be779f6ba41eeb348aef8d05d2`
+
+To verify the proof using the Technocore starter client:
+
+```bash
+python ../technocore-did-starter/technocore_agent.py verify-proof technocore-analysis-proof.json
