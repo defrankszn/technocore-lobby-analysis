@@ -188,6 +188,72 @@ def analyze():
         }
 
 
+@app.get("/api/cron")
+def cron_collect():
+    try:
+        request = urllib.request.Request(
+            TECHNOCORE_URL,
+            headers={
+                "Accept": "application/json",
+                "User-Agent": "technocore-lobby-intelligence-cron/1.0",
+            },
+        )
+
+        with urllib.request.urlopen(request, timeout=15) as response:
+            data = json.loads(response.read().decode("utf-8"))
+
+        messages = data["messages"]
+
+        dids = [message["from"] for message in messages]
+        texts = [message["text"] for message in messages]
+
+        did_counts = Counter(dids)
+        text_counts = Counter(texts)
+
+        unique_dids = len(did_counts)
+        unique_texts = len(text_counts)
+
+        repeated_text_messages = sum(
+            count
+            for count in text_counts.values()
+            if count > 1
+        )
+
+        total_messages = len(messages)
+
+        metrics = {
+            "generated_at": datetime.now(timezone.utc),
+            "room": data.get("room", "lobby"),
+            "first_seq": data.get("first_seq"),
+            "last_seq": data.get("last_seq"),
+            "total_messages": total_messages,
+            "unique_dids": unique_dids,
+            "did_uniqueness_rate": round(
+                unique_dids / total_messages * 100, 1
+            ) if total_messages else 0,
+            "unique_exact_texts": unique_texts,
+            "text_uniqueness_rate": round(
+                unique_texts / total_messages * 100, 1
+            ) if total_messages else 0,
+            "repeated_text_messages": repeated_text_messages,
+            "repeated_text_rate": round(
+                repeated_text_messages / total_messages * 100, 1
+            ) if total_messages else 0,
+        }
+
+        save_snapshot(metrics)
+
+        return {
+            "status": "ok",
+            "message": "Scheduled observation processed.",
+            "last_seq": metrics["last_seq"],
+        }
+
+    except Exception as error:
+        return {
+            "status": "error",
+            "error": str(error),
+        }
 @app.get("/api/history")
 def history():
     try:
