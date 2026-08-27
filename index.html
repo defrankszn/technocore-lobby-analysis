@@ -114,6 +114,75 @@
       line-height: 1.45;
     }
 
+    .behavior-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .behavior-panel {
+      background: #111;
+      border: 1px solid #292929;
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .behavior-panel h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .behavior-description {
+      color: #8f8f8f;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
+    .behavior-row {
+      border-top: 1px solid #292929;
+      padding: 13px 0;
+    }
+
+    .behavior-row:first-of-type {
+      border-top: 0;
+    }
+
+    .did-text {
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12px;
+      color: #dedede;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
+
+    .behavior-meta {
+      color: #8f8f8f;
+      font-size: 12px;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .summary-card {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid #292929;
+      background: #101010;
+      border-radius: 10px;
+    }
+
+    .summary-number {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .summary-label {
+      color: #8f8f8f;
+      font-size: 13px;
+    }
+
     .meta {
       color: #7f7f7f;
       font-size: 13px;
@@ -173,13 +242,15 @@
 
 <body>
   <div class="container">
+
     <div class="header">
       <div>
         <h1>Technocore Lobby Intelligence</h1>
+
         <div class="subtitle">
-          Live analysis of the latest 200 public Technocore lobby messages.
-          Measures DID diversity, exact-text diversity, repeated-message concentration,
-          and historical trends across stored observations.
+          Live and historical analysis of public Technocore lobby activity.
+          Measures identity diversity, message repetition, persistent DIDs,
+          and cross-identity template reuse.
         </div>
       </div>
 
@@ -189,7 +260,9 @@
     <div id="status">Loading live data...</div>
 
     <div id="content" style="display:none;">
+
       <div class="grid">
+
         <div class="card">
           <div class="label">Total Messages</div>
           <div class="value" id="totalMessages"></div>
@@ -219,18 +292,28 @@
           <div class="label">Repeated-Text Rate</div>
           <div class="value" id="repeatRate"></div>
         </div>
+
       </div>
 
+
       <div class="section">
-        <h2>Top Repeated Templates</h2>
+        <h2>Top Repeated Templates — Latest Sample</h2>
+
+        <div class="notice" style="margin-bottom:14px;">
+          Most frequently repeated exact message strings within the latest
+          200-message lobby sample.
+        </div>
+
         <div id="templates"></div>
       </div>
+
 
       <div class="section">
         <h2>Historical Trends</h2>
 
-        <div class="notice" style="margin-bottom: 18px;">
-          Tracks DID uniqueness, text uniqueness, and exact-text repetition across stored lobby observations.
+        <div class="notice" style="margin-bottom:18px;">
+          Tracks DID uniqueness, text uniqueness, and exact-text repetition
+          across stored lobby observations.
         </div>
 
         <div id="historyEmpty" class="notice">
@@ -248,6 +331,7 @@
         </div>
 
         <div id="chartLegend" class="legend">
+
           <span class="legend-item">
             <span class="dot did"></span>
             DID uniqueness
@@ -262,32 +346,89 @@
             <span class="dot repeat"></span>
             Repeated-text rate
           </span>
+
         </div>
       </div>
+
+
+      <div class="section">
+        <h2>DID & Template Behavior Intelligence</h2>
+
+        <div class="notice">
+          Uses the accumulated message-level dataset to distinguish persistent
+          identities from message templates shared across multiple identities.
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-number" id="recurringDidCount">—</div>
+          <div class="summary-label">
+            Recurring DIDs observed more than once in stored message history
+          </div>
+        </div>
+
+        <div class="behavior-grid">
+
+          <div class="behavior-panel">
+            <h3>Top Recurring DIDs</h3>
+
+            <div class="behavior-description">
+              Identities with multiple messages in the accumulated dataset.
+            </div>
+
+            <div id="recurringDids">
+              <div class="notice">Loading DID behavior...</div>
+            </div>
+          </div>
+
+
+          <div class="behavior-panel">
+            <h3>Top Shared Templates</h3>
+
+            <div class="behavior-description">
+              Exact message templates used by the largest number of distinct DIDs.
+            </div>
+
+            <div id="sharedTemplates">
+              <div class="notice">Loading template behavior...</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
 
       <div class="section">
         <h2>Interpretation</h2>
+
         <div class="notice">
-          A unique DID represents a unique cryptographic identity in this sample,
-          not necessarily a unique human or operator. Exact-text repetition measures
-          identical message strings only and does not capture semantic similarity.
+          A unique DID represents a unique cryptographic identity in the
+          observed dataset, not necessarily a unique human or operator.
+          Exact-text repetition identifies identical message strings.
+          Shared templates across many DIDs indicate common message behavior,
+          but do not by themselves prove common ownership, automation,
+          or coordination.
         </div>
       </div>
 
+
       <div class="meta">
-        Sequence range:
+        Latest sequence range:
         <span id="firstSeq"></span>
         →
         <span id="lastSeq"></span>
+
         <br />
 
         Last generated:
         <span id="generatedAt"></span>
       </div>
+
     </div>
   </div>
 
+
   <script>
+
     async function loadData() {
       const status = document.getElementById("status");
       const content = document.getElementById("content");
@@ -334,7 +475,10 @@
         document.getElementById("generatedAt").textContent =
           new Date(data.generated_at).toLocaleString();
 
-        const templates = document.getElementById("templates");
+
+        const templates =
+          document.getElementById("templates");
+
         templates.innerHTML = "";
 
         if (
@@ -344,17 +488,28 @@
           templates.innerHTML =
             "<div class='notice'>No repeated exact-text templates in this sample.</div>";
         } else {
+
           data.top_repeated_templates.forEach(item => {
-            const wrapper = document.createElement("div");
+            const wrapper =
+              document.createElement("div");
+
             wrapper.className = "template";
 
-            wrapper.innerHTML = `
-              <div class="template-count">${item.count} occurrences</div>
-              <div class="template-text"></div>
-            `;
+            const count =
+              document.createElement("div");
 
-            wrapper.querySelector(".template-text").textContent =
-              item.text;
+            count.className = "template-count";
+            count.textContent =
+              item.count + " occurrences";
+
+            const text =
+              document.createElement("div");
+
+            text.className = "template-text";
+            text.textContent = item.text;
+
+            wrapper.appendChild(count);
+            wrapper.appendChild(text);
 
             templates.appendChild(wrapper);
           });
@@ -366,37 +521,219 @@
       } catch (error) {
         status.className = "error";
         status.style.display = "block";
+
         status.textContent =
-          "Failed to load live data: " + error.message;
+          "Failed to load live data: " +
+          error.message;
       }
     }
 
-    async function loadHistory() {
-      const empty = document.getElementById("historyEmpty");
-      const chart = document.getElementById("historyChart");
-      const legend = document.getElementById("chartLegend");
+
+    async function loadBehavior() {
+
+      const didContainer =
+        document.getElementById("recurringDids");
+
+      const templateContainer =
+        document.getElementById("sharedTemplates");
+
+      const recurringCount =
+        document.getElementById("recurringDidCount");
 
       try {
-        const response = await fetch("/api/history", {
-          cache: "no-store"
-        });
 
-        const data = await response.json();
+        const response =
+          await fetch("/api/behavior", {
+            cache: "no-store"
+          });
+
+        const data =
+          await response.json();
 
         if (data.status !== "ok") {
-          throw new Error(data.error || "History unavailable");
+          throw new Error(
+            data.error ||
+            "Behavior analysis unavailable"
+          );
         }
 
-        const observations = [...data.observations].reverse();
+
+        recurringCount.textContent =
+          data.recurring_dids;
+
+
+        didContainer.innerHTML = "";
+
+        if (
+          !data.top_recurring_dids ||
+          data.top_recurring_dids.length === 0
+        ) {
+
+          didContainer.innerHTML =
+            "<div class='notice'>No recurring DIDs detected yet.</div>";
+
+        } else {
+
+          data.top_recurring_dids.forEach(
+            (item, index) => {
+
+              const row =
+                document.createElement("div");
+
+              row.className = "behavior-row";
+
+
+              const did =
+                document.createElement("div");
+
+              did.className = "did-text";
+
+              did.textContent =
+                "#" +
+                (index + 1) +
+                " " +
+                item.did;
+
+
+              const meta =
+                document.createElement("div");
+
+              meta.className =
+                "behavior-meta";
+
+              meta.textContent =
+                item.message_count +
+                " messages • " +
+                item.unique_texts +
+                " unique texts";
+
+
+              row.appendChild(did);
+              row.appendChild(meta);
+
+              didContainer.appendChild(row);
+            }
+          );
+        }
+
+
+        templateContainer.innerHTML = "";
+
+        if (
+          !data.top_shared_templates ||
+          data.top_shared_templates.length === 0
+        ) {
+
+          templateContainer.innerHTML =
+            "<div class='notice'>No shared templates detected yet.</div>";
+
+        } else {
+
+          data.top_shared_templates.forEach(
+            (item, index) => {
+
+              const row =
+                document.createElement("div");
+
+              row.className = "behavior-row";
+
+
+              const text =
+                document.createElement("div");
+
+              text.className =
+                "template-text";
+
+              text.textContent =
+                "#" +
+                (index + 1) +
+                " " +
+                item.text;
+
+
+              const meta =
+                document.createElement("div");
+
+              meta.className =
+                "behavior-meta";
+
+              meta.textContent =
+                item.message_count +
+                " messages • " +
+                item.distinct_dids +
+                " distinct DIDs";
+
+
+              row.appendChild(text);
+              row.appendChild(meta);
+
+              templateContainer.appendChild(row);
+            }
+          );
+        }
+
+      } catch (error) {
+
+        recurringCount.textContent = "—";
+
+        didContainer.innerHTML =
+          "<div class='error'>Failed to load DID behavior: " +
+          escapeHtml(error.message) +
+          "</div>";
+
+        templateContainer.innerHTML =
+          "<div class='error'>Failed to load template behavior: " +
+          escapeHtml(error.message) +
+          "</div>";
+      }
+    }
+
+
+    async function loadHistory() {
+
+      const empty =
+        document.getElementById("historyEmpty");
+
+      const chart =
+        document.getElementById("historyChart");
+
+      const legend =
+        document.getElementById("chartLegend");
+
+      try {
+
+        const response =
+          await fetch("/api/history", {
+            cache: "no-store"
+          });
+
+        const data =
+          await response.json();
+
+        if (data.status !== "ok") {
+          throw new Error(
+            data.error ||
+            "History unavailable"
+          );
+        }
+
+        const observations =
+          [...data.observations].reverse();
+
 
         if (observations.length < 2) {
+
           chart.style.display = "none";
           legend.style.display = "none";
+
           empty.style.display = "block";
+
           empty.textContent =
             "History is active. At least two different lobby observations are needed to draw a trend.";
+
           return;
         }
+
 
         empty.style.display = "none";
         chart.style.display = "block";
@@ -405,16 +742,23 @@
         drawHistoryChart(observations);
 
       } catch (error) {
+
         chart.style.display = "none";
         legend.style.display = "none";
+
         empty.style.display = "block";
+
         empty.textContent =
-          "Historical data unavailable: " + error.message;
+          "Historical data unavailable: " +
+          error.message;
       }
     }
 
+
     function drawHistoryChart(observations) {
-      const svg = document.getElementById("historyChart");
+
+      const svg =
+        document.getElementById("historyChart");
 
       const width = 900;
       const height = 360;
@@ -424,134 +768,251 @@
       const top = 25;
       const bottom = 45;
 
-      const plotWidth = width - left - right;
-      const plotHeight = height - top - bottom;
+      const plotWidth =
+        width - left - right;
+
+      const plotHeight =
+        height - top - bottom;
 
       svg.innerHTML = "";
 
-      const ns = "http://www.w3.org/2000/svg";
+      const ns =
+        "http://www.w3.org/2000/svg";
 
-      function addLine(x1, y1, x2, y2, stroke, dash = "") {
-        const line = document.createElementNS(ns, "line");
+
+      function addLine(
+        x1,
+        y1,
+        x2,
+        y2,
+        stroke
+      ) {
+
+        const line =
+          document.createElementNS(
+            ns,
+            "line"
+          );
 
         line.setAttribute("x1", x1);
         line.setAttribute("y1", y1);
         line.setAttribute("x2", x2);
         line.setAttribute("y2", y2);
-        line.setAttribute("stroke", stroke);
-
-        if (dash) {
-          line.setAttribute("stroke-dasharray", dash);
-        }
+        line.setAttribute(
+          "stroke",
+          stroke
+        );
 
         svg.appendChild(line);
       }
 
-      function addText(x, y, text, anchor = "start") {
-        const label = document.createElementNS(ns, "text");
+
+      function addText(
+        x,
+        y,
+        text,
+        anchor = "start"
+      ) {
+
+        const label =
+          document.createElementNS(
+            ns,
+            "text"
+          );
 
         label.setAttribute("x", x);
         label.setAttribute("y", y);
-        label.setAttribute("fill", "#888");
-        label.setAttribute("font-size", "12");
-        label.setAttribute("text-anchor", anchor);
+
+        label.setAttribute(
+          "fill",
+          "#888"
+        );
+
+        label.setAttribute(
+          "font-size",
+          "12"
+        );
+
+        label.setAttribute(
+          "text-anchor",
+          anchor
+        );
+
         label.textContent = text;
 
         svg.appendChild(label);
       }
 
-      function addCircle(x, y, fill, titleText) {
-        const circle = document.createElementNS(ns, "circle");
+
+      function addCircle(
+        x,
+        y,
+        fill,
+        titleText
+      ) {
+
+        const circle =
+          document.createElementNS(
+            ns,
+            "circle"
+          );
 
         circle.setAttribute("cx", x);
         circle.setAttribute("cy", y);
         circle.setAttribute("r", "4");
-        circle.setAttribute("fill", fill);
 
-        const title = document.createElementNS(ns, "title");
-        title.textContent = titleText;
+        circle.setAttribute(
+          "fill",
+          fill
+        );
+
+
+        const title =
+          document.createElementNS(
+            ns,
+            "title"
+          );
+
+        title.textContent =
+          titleText;
 
         circle.appendChild(title);
+
         svg.appendChild(circle);
       }
 
-      [0, 25, 50, 75, 100].forEach(value => {
-        const y =
-          top + plotHeight - (value / 100) * plotHeight;
 
-        addLine(
-          left,
-          y,
-          width - right,
-          y,
-          "#292929"
-        );
+      [0, 25, 50, 75, 100].forEach(
+        value => {
 
-        addText(
-          left - 10,
-          y + 4,
-          value + "%",
-          "end"
-        );
-      });
+          const y =
+            top +
+            plotHeight -
+            (value / 100) *
+            plotHeight;
+
+          addLine(
+            left,
+            y,
+            width - right,
+            y,
+            "#292929"
+          );
+
+          addText(
+            left - 10,
+            y + 4,
+            value + "%",
+            "end"
+          );
+        }
+      );
+
 
       const xForIndex = index => {
+
         if (observations.length === 1) {
-          return left + plotWidth / 2;
+          return left +
+            plotWidth / 2;
         }
 
         return (
           left +
-          (index / (observations.length - 1)) *
-            plotWidth
+          (
+            index /
+            (observations.length - 1)
+          ) *
+          plotWidth
         );
       };
+
 
       const yForValue = value =>
         top +
         plotHeight -
-        (Number(value) / 100) * plotHeight;
+        (
+          Number(value) /
+          100
+        ) *
+        plotHeight;
+
 
       const series = [
+
         {
           key: "did_uniqueness_rate",
           label: "DID uniqueness",
           stroke: "#ffffff"
         },
+
         {
           key: "text_uniqueness_rate",
           label: "Text uniqueness",
           stroke: "#9ca3af"
         },
+
         {
           key: "repeated_text_rate",
           label: "Repeated-text rate",
           stroke: "#666666"
         }
+
       ];
 
+
       series.forEach(item => {
+
         const polyline =
-          document.createElementNS(ns, "polyline");
+          document.createElementNS(
+            ns,
+            "polyline"
+          );
 
-        const points = observations
-          .map((observation, index) => {
-            return (
-              xForIndex(index) +
-              "," +
-              yForValue(observation[item.key])
-            );
-          })
-          .join(" ");
 
-        polyline.setAttribute("points", points);
-        polyline.setAttribute("fill", "none");
-        polyline.setAttribute("stroke", item.stroke);
-        polyline.setAttribute("stroke-width", "3");
+        const points =
+          observations
+            .map(
+              (observation, index) => {
+
+                return (
+                  xForIndex(index) +
+                  "," +
+                  yForValue(
+                    observation[
+                      item.key
+                    ]
+                  )
+                );
+              }
+            )
+            .join(" ");
+
+
+        polyline.setAttribute(
+          "points",
+          points
+        );
+
+        polyline.setAttribute(
+          "fill",
+          "none"
+        );
+
+        polyline.setAttribute(
+          "stroke",
+          item.stroke
+        );
+
+        polyline.setAttribute(
+          "stroke-width",
+          "3"
+        );
+
         polyline.setAttribute(
           "stroke-linejoin",
           "round"
         );
+
         polyline.setAttribute(
           "stroke-linecap",
           "round"
@@ -559,44 +1020,89 @@
 
         svg.appendChild(polyline);
 
-        observations.forEach((observation, index) => {
-          const x = xForIndex(index);
-          const y = yForValue(observation[item.key]);
 
-          addCircle(
-            x,
-            y,
-            item.stroke,
-            `${item.label}: ${observation[item.key]}%`
-          );
-        });
-      });
+        observations.forEach(
+          (observation, index) => {
 
-      observations.forEach((observation, index) => {
-        const x = xForIndex(index);
-        const date = new Date(observation.generated_at);
+            const x =
+              xForIndex(index);
 
-        addText(
-          x,
-          height - 15,
-          date.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit"
-          }),
-          "middle"
+            const y =
+              yForValue(
+                observation[
+                  item.key
+                ]
+              );
+
+            addCircle(
+              x,
+              y,
+              item.stroke,
+              item.label +
+              ": " +
+              observation[
+                item.key
+              ] +
+              "%"
+            );
+          }
         );
       });
+
+
+      observations.forEach(
+        (observation, index) => {
+
+          const x =
+            xForIndex(index);
+
+          const date =
+            new Date(
+              observation.generated_at
+            );
+
+          addText(
+            x,
+            height - 15,
+            date.toLocaleTimeString(
+              [],
+              {
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            ),
+            "middle"
+          );
+        }
+      );
     }
+
+
+    function escapeHtml(value) {
+
+      const div =
+        document.createElement("div");
+
+      div.textContent =
+        String(value);
+
+      return div.innerHTML;
+    }
+
 
     async function refreshAll() {
+
       await loadData();
 
-      setTimeout(() => {
-        loadHistory();
-      }, 500);
+      await Promise.all([
+        loadHistory(),
+        loadBehavior()
+      ]);
     }
 
+
     refreshAll();
+
   </script>
 </body>
 </html>
