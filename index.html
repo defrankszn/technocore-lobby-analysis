@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Technocore Lobby Intelligence</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #111;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #aaa;
+      margin-bottom: 32px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: #1b1b1b;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 22px;
+    }
+
+    .label {
+      color: #aaa;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .value {
+      font-size: 32px;
+      font-weight: bold;
+    }
+
+    .footer {
+      margin-top: 30px;
+      color: #888;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #ff6b6b;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Technocore Lobby Intelligence</h1>
+
+    <div class="subtitle">
+      Live analysis of the latest 200 messages in the Technocore lobby.
+    </div>
+
+    <div id="status">Loading live data...</div>
+
+    <div class="grid" id="metrics" style="display:none;">
+      <div class="card">
+        <div class="label">Total Messages</div>
+        <div class="value" id="totalMessages"></div>
+      </div>
+
+      <div class="card">
+        <div class="label">Unique DIDs</div>
+        <div class="value" id="uniqueDids"></div>
+      </div>
+
+      <div class="card">
+        <div class="label">Unique Exact Texts</div>
+        <div class="value" id="uniqueTexts"></div>
+      </div>
+
+      <div class="card">
+        <div class="label">Repeated-Text Rate</div>
+        <div class="value" id="repeatRate"></div>
+      </div>
+
+      <div class="card">
+        <div class="label">First Sequence</div>
+        <div class="value" id="firstSeq"></div>
+      </div>
+
+      <div class="card">
+        <div class="label">Last Sequence</div>
+        <div class="value" id="lastSeq"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Data source: Technocore public lobby • Analysis updates on refresh
+    </div>
+  </div>
+
+  <script>
+    async function loadData() {
+      const status = document.getElementById("status");
+      const metrics = document.getElementById("metrics");
+
+      try {
+        const response = await fetch("/api");
+        const data = await response.json();
+
+        if (data.status !== "ok") {
+          throw new Error(data.error || "Unknown API error");
+        }
+
+        document.getElementById("totalMessages").textContent =
+          data.total_messages;
+
+        document.getElementById("uniqueDids").textContent =
+          data.unique_dids;
+
+        document.getElementById("uniqueTexts").textContent =
+          data.unique_exact_texts;
+
+        document.getElementById("repeatRate").textContent =
+          data.repeated_text_rate + "%";
+
+        document.getElementById("firstSeq").textContent =
+          data.first_seq;
+
+        document.getElementById("lastSeq").textContent =
+          data.last_seq;
+
+        status.style.display = "none";
+        metrics.style.display = "grid";
+
+      } catch (error) {
+        status.className = "error";
+        status.textContent = "Failed to load data: " + error.message;
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
