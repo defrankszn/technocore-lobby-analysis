@@ -6,115 +6,213 @@
   <title>Technocore Lobby Intelligence</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
-      background: #111;
-      color: #fff;
+      font-family: Arial, sans-serif;
+      background: #0b0b0b;
+      color: #f5f5f5;
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 40px 20px;
+      padding: 40px 20px 60px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
     }
 
     h1 {
-      margin-bottom: 8px;
+      margin: 0 0 8px;
+      font-size: 34px;
     }
 
     .subtitle {
-      color: #aaa;
-      margin-bottom: 32px;
+      color: #9b9b9b;
+      max-width: 700px;
+      line-height: 1.5;
+    }
+
+    button {
+      background: #fff;
+      color: #111;
+      border: 0;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
     }
 
     .card {
-      background: #1b1b1b;
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 22px;
+      background: #151515;
+      border: 1px solid #2b2b2b;
+      border-radius: 14px;
+      padding: 20px;
     }
 
     .label {
-      color: #aaa;
-      font-size: 14px;
+      color: #8f8f8f;
+      font-size: 13px;
       margin-bottom: 8px;
     }
 
     .value {
-      font-size: 32px;
-      font-weight: bold;
+      font-size: 30px;
+      font-weight: 700;
     }
 
-    .footer {
-      margin-top: 30px;
-      color: #888;
-      font-size: 14px;
+    .section {
+      background: #151515;
+      border: 1px solid #2b2b2b;
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 18px;
+    }
+
+    .section h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .template {
+      border-top: 1px solid #292929;
+      padding: 14px 0;
+    }
+
+    .template:first-of-type {
+      border-top: 0;
+    }
+
+    .template-count {
+      color: #bdbdbd;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .template-text {
+      line-height: 1.45;
+    }
+
+    .meta {
+      color: #7f7f7f;
+      font-size: 13px;
+      margin-top: 24px;
+      line-height: 1.6;
+    }
+
+    .notice {
+      color: #b7b7b7;
+      line-height: 1.6;
     }
 
     .error {
-      color: #ff6b6b;
+      color: #ff7676;
     }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <h1>Technocore Lobby Intelligence</h1>
+    <div class="header">
+      <div>
+        <h1>Technocore Lobby Intelligence</h1>
+        <div class="subtitle">
+          Live analysis of the latest 200 public Technocore lobby messages.
+          Measures DID diversity, exact-text diversity and repeated-message concentration.
+        </div>
+      </div>
 
-    <div class="subtitle">
-      Live analysis of the latest 200 messages in the Technocore lobby.
+      <button onclick="loadData()">Refresh</button>
     </div>
 
     <div id="status">Loading live data...</div>
 
-    <div class="grid" id="metrics" style="display:none;">
-      <div class="card">
-        <div class="label">Total Messages</div>
-        <div class="value" id="totalMessages"></div>
+    <div id="content" style="display:none;">
+      <div class="grid">
+        <div class="card">
+          <div class="label">Total Messages</div>
+          <div class="value" id="totalMessages"></div>
+        </div>
+
+        <div class="card">
+          <div class="label">Unique DIDs</div>
+          <div class="value" id="uniqueDids"></div>
+        </div>
+
+        <div class="card">
+          <div class="label">DID Uniqueness</div>
+          <div class="value" id="didUniqueness"></div>
+        </div>
+
+        <div class="card">
+          <div class="label">Unique Exact Texts</div>
+          <div class="value" id="uniqueTexts"></div>
+        </div>
+
+        <div class="card">
+          <div class="label">Text Uniqueness</div>
+          <div class="value" id="textUniqueness"></div>
+        </div>
+
+        <div class="card">
+          <div class="label">Repeated-Text Rate</div>
+          <div class="value" id="repeatRate"></div>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="label">Unique DIDs</div>
-        <div class="value" id="uniqueDids"></div>
+      <div class="section">
+        <h2>Top Repeated Templates</h2>
+        <div id="templates"></div>
       </div>
 
-      <div class="card">
-        <div class="label">Unique Exact Texts</div>
-        <div class="value" id="uniqueTexts"></div>
+      <div class="section">
+        <h2>Interpretation</h2>
+        <div class="notice">
+          A unique DID represents a unique cryptographic identity in this sample,
+          not necessarily a unique human or operator. Exact-text repetition measures
+          identical message strings only and does not capture semantic similarity.
+        </div>
       </div>
 
-      <div class="card">
-        <div class="label">Repeated-Text Rate</div>
-        <div class="value" id="repeatRate"></div>
-      </div>
+      <div class="meta">
+        Sequence range:
+        <span id="firstSeq"></span>
+        →
+        <span id="lastSeq"></span>
+        <br />
 
-      <div class="card">
-        <div class="label">First Sequence</div>
-        <div class="value" id="firstSeq"></div>
+        Last generated:
+        <span id="generatedAt"></span>
       </div>
-
-      <div class="card">
-        <div class="label">Last Sequence</div>
-        <div class="value" id="lastSeq"></div>
-      </div>
-    </div>
-
-    <div class="footer">
-      Data source: Technocore public lobby • Analysis updates on refresh
     </div>
   </div>
 
   <script>
     async function loadData() {
       const status = document.getElementById("status");
-      const metrics = document.getElementById("metrics");
+      const content = document.getElementById("content");
+
+      status.className = "";
+      status.style.display = "block";
+      status.textContent = "Loading live data...";
+      content.style.display = "none";
 
       try {
         const response = await fetch("/api");
@@ -130,8 +228,14 @@
         document.getElementById("uniqueDids").textContent =
           data.unique_dids;
 
+        document.getElementById("didUniqueness").textContent =
+          data.did_uniqueness_rate + "%";
+
         document.getElementById("uniqueTexts").textContent =
           data.unique_exact_texts;
+
+        document.getElementById("textUniqueness").textContent =
+          data.text_uniqueness_rate + "%";
 
         document.getElementById("repeatRate").textContent =
           data.repeated_text_rate + "%";
@@ -142,8 +246,33 @@
         document.getElementById("lastSeq").textContent =
           data.last_seq;
 
+        document.getElementById("generatedAt").textContent =
+          new Date(data.generated_at).toLocaleString();
+
+        const templates = document.getElementById("templates");
+        templates.innerHTML = "";
+
+        if (data.top_repeated_templates.length === 0) {
+          templates.innerHTML =
+            "<div class='notice'>No repeated exact-text templates in this sample.</div>";
+        } else {
+          data.top_repeated_templates.forEach(item => {
+            const wrapper = document.createElement("div");
+            wrapper.className = "template";
+
+            wrapper.innerHTML = `
+              <div class="template-count">${item.count} occurrences</div>
+              <div class="template-text"></div>
+            `;
+
+            wrapper.querySelector(".template-text").textContent = item.text;
+
+            templates.appendChild(wrapper);
+          });
+        }
+
         status.style.display = "none";
-        metrics.style.display = "grid";
+        content.style.display = "block";
 
       } catch (error) {
         status.className = "error";

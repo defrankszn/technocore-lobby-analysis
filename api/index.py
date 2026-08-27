@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import json
 import urllib.request
 from collections import Counter
+from datetime import datetime, timezone
 
 app = FastAPI()
 
@@ -30,6 +31,9 @@ def analyze():
         did_counts = Counter(dids)
         text_counts = Counter(texts)
 
+        unique_dids = len(did_counts)
+        unique_texts = len(text_counts)
+
         repeated_text_messages = sum(
             count
             for count in text_counts.values()
@@ -42,6 +46,27 @@ def analyze():
             else 0
         )
 
+        did_uniqueness_rate = (
+            unique_dids / len(messages) * 100
+            if messages
+            else 0
+        )
+
+        text_uniqueness_rate = (
+            unique_texts / len(messages) * 100
+            if messages
+            else 0
+        )
+
+        top_templates = [
+            {
+                "text": text,
+                "count": count,
+            }
+            for text, count in text_counts.most_common(5)
+            if count > 1
+        ]
+
         return {
             "status": "ok",
             "service": "Technocore Lobby Intelligence",
@@ -49,10 +74,14 @@ def analyze():
             "first_seq": data.get("first_seq"),
             "last_seq": data.get("last_seq"),
             "total_messages": len(messages),
-            "unique_dids": len(did_counts),
-            "unique_exact_texts": len(text_counts),
+            "unique_dids": unique_dids,
+            "did_uniqueness_rate": round(did_uniqueness_rate, 1),
+            "unique_exact_texts": unique_texts,
+            "text_uniqueness_rate": round(text_uniqueness_rate, 1),
             "repeated_text_messages": repeated_text_messages,
             "repeated_text_rate": round(repeated_text_rate, 1),
+            "top_repeated_templates": top_templates,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as error:
