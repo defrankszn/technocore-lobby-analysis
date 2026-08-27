@@ -391,3 +391,82 @@ def message_stats():
             "status": "error",
             "error": str(error),
         }
+    
+@app.get("/api/behavior")
+def behavior():
+    try:
+        initialize_database()
+
+        with psycopg.connect(DATABASE_URL) as connection:
+            with connection.cursor() as cursor:
+
+                cursor.execute(
+                    """
+                    SELECT
+                        COUNT(*) 
+                    FROM (
+                        SELECT did
+                        FROM lobby_messages
+                        GROUP BY did
+                        HAVING COUNT(*) > 1
+                    ) recurring;
+                    """
+                )
+                recurring_dids = cursor.fetchone()[0]
+
+                cursor.execute(
+                    """
+                    SELECT
+                        did,
+                        COUNT(*) AS message_count,
+                        COUNT(DISTINCT text) AS unique_texts
+                    FROM lobby_messages
+                    GROUP BY did
+                    HAVING COUNT(*) > 1
+                    ORDER BY message_count DESC
+                    LIMIT 10;
+                    """
+                )
+                top_dids_rows = cursor.fetchall()
+
+                cursor.execute(
+                    """
+                    SELECT
+                        text,
+                        COUNT(*) AS message_count,
+                        COUNT(DISTINCT did) AS distinct_dids
+                    FROM lobby_messages
+                    GROUP BY text
+                    HAVING COUNT(*) > 1
+                    ORDER BY distinct_dids DESC, message_count DESC
+                    LIMIT 10;
+                    """
+                )
+                template_rows = cursor.fetchall()
+
+        return {
+            "status": "ok",
+            "recurring_dids": recurring_dids,
+            "top_recurring_dids": [
+                {
+                    "did": row[0],
+                    "message_count": row[1],
+                    "unique_texts": row[2],
+                }
+                for row in top_dids_rows
+            ],
+            "top_shared_templates": [
+                {
+                    "text": row[0],
+                    "message_count": row[1],
+                    "distinct_dids": row[2],
+                }
+                for row in template_rows
+            ],
+        }
+
+    except Exception as error:
+        return {
+            "status": "error",
+            "error": str(error),
+        }
