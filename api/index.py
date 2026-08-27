@@ -47,6 +47,18 @@ def initialize_database():
                 );
                 """
             )
+            cursor.execute(
+    """
+    CREATE TABLE IF NOT EXISTS lobby_messages (
+        seq BIGINT PRIMARY KEY,
+        ts TIMESTAMPTZ NOT NULL,
+        did TEXT NOT NULL,
+        text TEXT NOT NULL,
+        nonce BIGINT,
+        collected_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    """
+)
 
 
 def save_snapshot(metrics):
@@ -87,6 +99,38 @@ def save_snapshot(metrics):
                 metrics,
             )
 
+def save_messages(messages):
+    initialize_database()
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        with connection.cursor() as cursor:
+            for message in messages:
+                cursor.execute(
+                    """
+                    INSERT INTO lobby_messages (
+                        seq,
+                        ts,
+                        did,
+                        text,
+                        nonce
+                    )
+                    VALUES (
+                        %(seq)s,
+                        %(ts)s,
+                        %(did)s,
+                        %(text)s,
+                        %(nonce)s
+                    )
+                    ON CONFLICT (seq) DO NOTHING;
+                    """,
+                    {
+                        "seq": message["seq"],
+                        "ts": message["ts"],
+                        "did": message["from"],
+                        "text": message["text"],
+                        "nonce": message.get("nonce"),
+                    },
+                )
 
 @app.get("/api")
 def analyze():
@@ -167,6 +211,7 @@ def analyze():
 
         try:
             save_snapshot(metrics)
+            save_messages(messages)
         except Exception as error:
             history_saved = False
             history_error = str(error)
@@ -242,6 +287,7 @@ def cron_collect():
         }
 
         save_snapshot(metrics)
+        save_messages(messages)
 
         return {
             "status": "ok",
