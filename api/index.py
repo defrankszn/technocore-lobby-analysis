@@ -1,3 +1,5 @@
+from fastapi.responses import HTMLResponse
+from pathlib import Path
 from fastapi import FastAPI
 import json
 import urllib.request
@@ -5,6 +7,12 @@ from collections import Counter
 from datetime import datetime, timezone
 
 app = FastAPI()
+DASHBOARD_FILE = Path(__file__).resolve().parent.parent / "index.html"
+
+
+@app.get("/", response_class=HTMLResponse)
+def dashboard():
+    return DASHBOARD_FILE.read_text(encoding="utf-8")
 
 TECHNOCORE_URL = "https://technocore.chat/r/lobby?format=json&limit=200"
 
