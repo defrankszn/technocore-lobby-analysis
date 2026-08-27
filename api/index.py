@@ -355,3 +355,39 @@ def history():
             "status": "error",
             "error": str(error),
         }
+    
+@app.get("/api/messages/stats")
+def message_stats():
+    try:
+        initialize_database()
+
+        with psycopg.connect(DATABASE_URL) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT
+                        COUNT(*) AS total_messages,
+                        COUNT(DISTINCT did) AS unique_dids,
+                        COUNT(DISTINCT text) AS unique_texts,
+                        MIN(seq) AS first_seq,
+                        MAX(seq) AS last_seq
+                    FROM lobby_messages;
+                    """
+                )
+
+                row = cursor.fetchone()
+
+        return {
+            "status": "ok",
+            "total_stored_messages": row[0],
+            "unique_dids": row[1],
+            "unique_exact_texts": row[2],
+            "first_seq": row[3],
+            "last_seq": row[4],
+        }
+
+    except Exception as error:
+        return {
+            "status": "error",
+            "error": str(error),
+        }
